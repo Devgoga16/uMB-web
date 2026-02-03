@@ -15,7 +15,9 @@ function Login() {
     e.preventDefault();
     
     if (!email || !password) {
-      setError('Por favor ingresa email y contraseña');
+      const msg = 'Por favor ingresa email y contraseña';
+      setError(msg);
+      toast.error(msg, { autoClose: false });
       return;
     }
 
@@ -30,7 +32,7 @@ function Login() {
       console.error('Error en login:', error);
       const errorMsg = error.mensaje || error.message || 'Error al iniciar sesión';
       setError(errorMsg);
-      toast.error(errorMsg);
+      toast.error(errorMsg, { autoClose: false });
     } finally {
       setLoading(false);
     }

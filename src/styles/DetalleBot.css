@@ -645,3 +645,315 @@
 .btn-refresh {
   margin-top: 1rem;
 }
+
+/* Tabla de Facturación */
+.billing-table-container {
+  overflow-x: auto;
+  margin-top: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.billing-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.billing-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.billing-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.billing-table tbody tr {
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.2s;
+}
+
+.billing-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.billing-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.billing-table td {
+  padding: 1rem;
+  vertical-align: middle;
+}
+
+.billing-month {
+  font-weight: 600;
+  color: #333;
+}
+
+.billing-usage {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.usage-main {
+  font-weight: 600;
+  color: #333;
+}
+
+.usage-extra {
+  font-size: 0.8rem;
+  color: #667eea;
+  font-weight: 500;
+}
+
+.billing-cost {
+  color: #666;
+  font-weight: 500;
+}
+
+.billing-total {
+  font-weight: 700;
+  color: #667eea;
+  font-size: 1rem;
+}
+
+.badge-billing {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.badge-billing.badge-invoiced {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.badge-billing.badge-paid {
+  background: #d4edda;
+  color: #155724;
+}
+
+.badge-billing.badge-pending {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.billing-invoice {
+  text-align: center;
+}
+
+.invoice-status {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.invoice-check {
+  color: #ffc107;
+  display: inline-flex;
+  transition: transform 0.2s;
+}
+
+.invoice-check:hover {
+  transform: scale(1.2);
+}
+
+.invoice-check.uploaded {
+  color: #28a745;
+}
+
+.invoice-check.paid {
+  color: #17a2b8;
+}
+
+/* Acciones de facturación */
+.billing-actions {
+  text-align: center;
+}
+
+.actions-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.invoice-actions-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn-upload-invoice {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-upload-invoice:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+}
+
+.btn-upload-invoice:active {
+  transform: translateY(0);
+}
+
+.btn-download-invoice {
+  padding: 0.4rem 0.8rem;
+  background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.btn-download-invoice:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
+}
+
+.btn-download-invoice:active {
+  transform: translateY(0);
+}
+
+.btn-delete-invoice {
+  padding: 0.4rem 0.8rem;
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.btn-delete-invoice:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+}
+
+.btn-delete-invoice:active {
+  transform: translateY(0);
+}
+
+.uploaded-label {
+  color: #28a745;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Formulario de subida de factura */
+.upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0.5rem 0;
+}
+
+.upload-info {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.upload-info p {
+  margin: 0.5rem 0;
+  color: #333;
+}
+
+.upload-info strong {
+  color: #667eea;
+  margin-right: 0.5rem;
+}
+
+.form-input-file {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px dashed #cbd5e0;
+  border-radius: 8px;
+  background: #f8f9fa;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.form-input-file:hover {
+  border-color: #667eea;
+  background: #fff;
+}
+
+.form-input-file:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.file-name {
+  display: block;
+  margin-top: 0.5rem;
+  color: #667eea;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* Responsive para tabla de facturación */
+@media (max-width: 1200px) {
+  .billing-table {
+    font-size: 0.85rem;
+  }
+  
+  .billing-table th,
+  .billing-table td {
+    padding: 0.75rem;
+  }
+  
+  .btn-upload-invoice {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .billing-table-container {
+    overflow-x: scroll;
+  }
+  
+  .billing-table {
+    min-width: 900px;
+  }
+}

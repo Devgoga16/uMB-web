@@ -30,9 +30,13 @@ api.interceptors.response.use(
   (error) => {
     // Si el token expiró o es inválido (401)
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Solo redirigir si NO estamos en la página de login
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/login' && currentPath !== '/') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
     
     // Si no tiene permisos (403)

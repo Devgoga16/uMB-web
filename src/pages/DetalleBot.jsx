@@ -15,7 +15,9 @@ import {
   EyeOff,
   Copy,
   Send,
-  Code
+  Code,
+  FileText,
+  Trash2
 } from 'lucide-react';
 import axios from 'axios';
 import botService from '../services/botService';
@@ -34,6 +36,7 @@ function DetalleBot() {
   const [health, setHealth] = useState(null);
   const [summary, setSummary] = useState(null);
   const [usage, setUsage] = useState(null);
+  const [billing, setBilling] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mostrarApiKey, setMostrarApiKey] = useState(false);
@@ -44,6 +47,12 @@ function DetalleBot() {
   const [mensajeTexto, setMensajeTexto] = useState('');
   const [enviandoMensaje, setEnviandoMensaje] = useState(false);
   const [resultadoEnvio, setResultadoEnvio] = useState(null);
+  
+  // Estados para el modal de subida de factura
+  const [modalFactura, setModalFactura] = useState(false);
+  const [billingSeleccionado, setBillingSeleccionado] = useState(null);
+  const [archivoFactura, setArchivoFactura] = useState(null);
+  const [subiendoFactura, setSubiendoFactura] = useState(false);
 
   useEffect(() => {
     cargarDatos();
@@ -76,10 +85,11 @@ function DetalleBot() {
       });
 
       // Cargar datos en paralelo
-      const [healthRes, summaryRes, usageRes] = await Promise.allSettled([
+      const [healthRes, summaryRes, usageRes, billingRes] = await Promise.allSettled([
         botApi.get('/api/health'),
         botApi.get('/api/stats/summary'),
-        botApi.get('/api/stats/usage')
+        botApi.get('/api/stats/usage'),
+        botApi.get('/api/stats/billing')
       ]);
 
       if (healthRes.status === 'fulfilled') {
@@ -92,6 +102,10 @@ function DetalleBot() {
 
       if (usageRes.status === 'fulfilled') {
         setUsage(usageRes.value.data);
+      }
+
+      if (billingRes.status === 'fulfilled') {
+        setBilling(billingRes.value.data);
       }
 
     } catch (error) {
@@ -173,6 +187,152 @@ function DetalleBot() {
     setNumeroDestino('');
     setMensajeTexto('');
     setResultadoEnvio(null);
+  };
+
+  const abrirModalFactura = (billingRecord) => {
+    setBillingSeleccionado(billingRecord);
+    setModalFactura(true);
+  };
+
+  const cerrarModalFactura = () => {
+    setModalFactura(false);
+    setBillingSeleccionado(null);
+    setArchivoFactura(null);
+  };
+
+  const handleArchivoChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type === 'application/pdf') {
+      setArchivoFactura(file);
+    } else {
+      toast.error('Por favor selecciona un archivo PDF válido');
+    }
+  };
+
+  const convertirPDFaBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        // Remover el prefijo 'data:application/pdf;base64,'
+        const base64 = reader.result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const subirFactura = async (e) => {
+    e.preventDefault();
+    if (!archivoFactura) {
+      toast.error('Por favor selecciona un archivo PDF');
+      return;
+    }
+
+    setSubiendoFactura(true);
+
+    try {
+      const base64 = await convertirPDFaBase64(archivoFactura);
+      
+      const response = await axios.post(
+        `${bot.url}/api/stats/invoice/upload`,
+        {
+          billingId: billingSeleccionado._id,
+          base64: base64,
+          filename: archivoFactura.name
+        },
+        {
+          headers: {
+            'accept': 'application/json',
+            'x-api-key': bot.apiKey,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      toast.success(
+        `Factura subida exitosamente para ${billingSeleccionado.month}`,
+        { autoClose: 3000 }
+      );
+      
+      // Recargar los datos de facturación
+      await cargarDatos();
+      
+      // Cerrar modal
+      setTimeout(() => {
+        cerrarModalFactura();
+      }, 1000);
+    } catch (error) {
+      console.error('Error al subir factura:', error);
+      const errorMsg = error.response?.data?.message || 'Error al subir la factura';
+      toast.error(errorMsg);
+    } finally {
+      setSubiendoFactura(false);
+    }
+  };
+
+  const descargarFactura = async (billingRecord) => {
+    try {
+      const response = await axios.get(
+        `${bot.url}/api/stats/invoice/file/${billingRecord._id}`,
+        {
+          headers: {
+            'accept': 'application/pdf',
+            'x-api-key': bot.apiKey
+          },
+          responseType: 'blob' // Importante para recibir el PDF como blob
+        }
+      );
+
+      // Crear un objeto URL del blob
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Abrir en nueva pestaña para previsualizar
+      window.open(url, '_blank');
+      
+      // Liberar el objeto URL después de un tiempo
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 100);
+
+    } catch (error) {
+      console.error('Error al descargar factura:', error);
+      const errorMsg = error.response?.data?.message || 'Error al descargar la factura';
+      toast.error(errorMsg);
+    }
+  };
+
+  const eliminarFactura = async (billingRecord) => {
+    const confirmacion = window.confirm(
+      `¿Estás seguro de eliminar la factura del mes ${billingRecord.month}?\n\nEsta acción no se puede deshacer.`
+    );
+
+    if (!confirmacion) return;
+
+    try {
+      await axios.delete(
+        `${bot.url}/api/stats/invoice/file/${billingRecord._id}`,
+        {
+          headers: {
+            'accept': 'application/json',
+            'x-api-key': bot.apiKey
+          }
+        }
+      );
+
+      toast.success(
+        `Factura eliminada exitosamente para ${billingRecord.month}`,
+        { autoClose: 3000 }
+      );
+      
+      // Recargar los datos de facturación
+      await cargarDatos();
+    } catch (error) {
+      console.error('Error al eliminar factura:', error);
+      const errorMsg = error.response?.data?.message || 'Error al eliminar la factura';
+      toast.error(errorMsg);
+    }
   };
 
   const copiarCurl = () => {
@@ -411,8 +571,125 @@ function DetalleBot() {
             </div>
             <div className="summary-item">
               <span className="summary-label">Última Facturación:</span>
-              <span>{summary.data?.lastBilling || 'Sin facturación'}</span>
+              <span>
+                {summary.data?.lastBilling 
+                  ? `${summary.data.lastBilling.month} - S/ ${summary.data.lastBilling.totalCost?.toFixed(2) || '0.00'}`
+                  : 'Sin facturación'
+                }
+              </span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Historial de Facturación */}
+      {billing && billing.data && billing.data.length > 0 && (
+        <div className="seccion-card">
+          <h2><Database size={20} /> Historial de Facturación</h2>
+          <div className="billing-table-container">
+            <table className="billing-table">
+              <thead>
+                <tr>
+                  <th>Mes</th>
+                  <th>WhatsApp</th>
+                  <th>Correos</th>
+                  <th>Plan Base</th>
+                  <th>Extras</th>
+                  <th>Total</th>
+                  <th>Estado</th>
+                  <th>Factura</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {billing.data.map((record) => (
+                  <tr key={record._id}>
+                    <td className="billing-month">{record.month}</td>
+                    <td>
+                      <div className="billing-usage">
+                        <span className="usage-main">{record.whatsappMessagesSent}</span>
+                        {record.whatsappExtraMessages > 0 && (
+                          <span className="usage-extra">+{record.whatsappExtraMessages} extra</span>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="billing-usage">
+                        <span className="usage-main">{record.emailsSent}</span>
+                        {record.emailsExtra > 0 && (
+                          <span className="usage-extra">+{record.emailsExtra} extra</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="billing-cost">S/ {record.basePlanCost.toFixed(2)}</td>
+                    <td className="billing-cost">
+                      {(record.extraWhatsappCost + record.extraEmailCost) > 0 
+                        ? `S/ ${(record.extraWhatsappCost + record.extraEmailCost).toFixed(2)}`
+                        : '-'
+                      }
+                    </td>
+                    <td className="billing-total">S/ {record.totalCost.toFixed(2)}</td>
+                    <td>
+                      <span className={`badge badge-billing badge-${record.status}`}>
+                        {record.status === 'invoiced' ? 'Facturado' : 
+                         record.status === 'paid' ? 'Pagado' : 
+                         record.status === 'pending' ? 'Pendiente' : record.status}
+                      </span>
+                    </td>
+                    <td className="billing-invoice">
+                      <div className="invoice-status">
+                        {record.invoiceGenerated && (
+                          <span className="invoice-check" title="Factura generada">
+                            <CheckCircle size={16} />
+                          </span>
+                        )}
+                        {record.invoiceUploaded && (
+                          <span className="invoice-check uploaded" title="Factura subida">
+                            <CheckCircle size={16} />
+                          </span>
+                        )}
+                        {record.paymentReceived && (
+                          <span className="invoice-check paid" title="Pago recibido">
+                            <CheckCircle size={16} />
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="billing-actions">
+                      {!record.invoiceUploaded ? (
+                        <button
+                          onClick={() => abrirModalFactura(record)}
+                          className="btn-upload-invoice"
+                          title="Subir factura PDF"
+                        >
+                          Subir PDF
+                        </button>
+                      ) : (
+                        <div className="actions-group">
+                          <span className="uploaded-label">✓ Subida</span>
+                          <div className="invoice-actions-buttons">
+                            <button
+                              onClick={() => descargarFactura(record)}
+                              className="btn-download-invoice"
+                              title="Ver/Descargar factura"
+                            >
+                              <FileText size={16} /> Ver
+                            </button>
+                            <button
+                              onClick={() => eliminarFactura(record)}
+                              className="btn-delete-invoice"
+                              title="Eliminar factura"
+                            >
+                              <Trash2 size={16} /> Eliminar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
@@ -532,6 +809,66 @@ function DetalleBot() {
                 <>
                   <Send size={18} /> Enviar Mensaje
                 </>
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal de Subida de Factura */}
+      <Modal
+        isOpen={modalFactura}
+        onClose={cerrarModalFactura}
+        title={`Subir Factura - ${billingSeleccionado?.month || ''}`}
+        size="medium"
+      >
+        <form onSubmit={subirFactura} className="upload-form">
+          <div className="upload-info">
+            <p><strong>Mes:</strong> {billingSeleccionado?.month}</p>
+            <p><strong>Total:</strong> S/ {billingSeleccionado?.totalCost?.toFixed(2)}</p>
+            <p><strong>Estado:</strong> {billingSeleccionado?.status}</p>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="pdfFile">
+              Selecciona el archivo PDF de la factura <span className="required">*</span>
+            </label>
+            <input
+              type="file"
+              id="pdfFile"
+              accept="application/pdf"
+              onChange={handleArchivoChange}
+              required
+              disabled={subiendoFactura}
+              className="form-input-file"
+            />
+            {archivoFactura && (
+              <small className="file-name">
+                Archivo seleccionado: {archivoFactura.name}
+              </small>
+            )}
+          </div>
+
+          <div className="form-actions">
+            <button
+              type="button"
+              onClick={cerrarModalFactura}
+              className="btn btn-secondary"
+              disabled={subiendoFactura}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={subiendoFactura || !archivoFactura}
+            >
+              {subiendoFactura ? (
+                <>
+                  <span className="spinner-small"></span> Subiendo...
+                </>
+              ) : (
+                'Subir Factura'
               )}
             </button>
           </div>
