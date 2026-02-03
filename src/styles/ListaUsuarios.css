@@ -1,0 +1,203 @@
+/* Estilos para Lista de Usuarios */
+
+.lista-usuarios {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.tabla-header {
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tabla-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.tabla-container {
+  overflow-x: auto;
+}
+
+.tabla-usuarios {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-usuarios thead {
+  background: #f8f9fa;
+  position: sticky;
+  top: 0;
+}
+
+.tabla-usuarios th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 2px solid #e0e0e0;
+  white-space: nowrap;
+}
+
+.tabla-usuarios td {
+  padding: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+}
+
+.tabla-usuarios tbody tr {
+  transition: background-color 0.2s;
+}
+
+.tabla-usuarios tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.usuario-inactivo {
+  opacity: 0.6;
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-usuario {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.badge-admin {
+  background: #fce4ec;
+  color: #c2185b;
+}
+
+.badge-activo {
+  background: #e8f5e9;
+  color: #388e3c;
+}
+
+.badge-inactivo {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+/* Acciones */
+.acciones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-icono {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.btn-icono:hover {
+  background: #f0f0f0;
+  transform: scale(1.1);
+}
+
+.btn-editar:hover {
+  background: #e3f2fd;
+}
+
+.btn-eliminar:hover {
+  background: #ffebee;
+}
+
+.btn-activar:hover {
+  background: #e8f5e9;
+}
+
+.btn-desactivar:hover {
+  background: #fff3e0;
+}
+
+/* Estados */
+.loading-container {
+  text-align: center;
+  padding: 3rem;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #1976d2;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-container {
+  text-align: center;
+  padding: 2rem;
+}
+
+.error-message {
+  color: #d32f2f;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.btn-retry {
+  background: #1976d2;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.btn-retry:hover {
+  background: #1565c0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tabla-container {
+    overflow-x: scroll;
+  }
+  
+  .tabla-usuarios {
+    font-size: 0.875rem;
+  }
+  
+  .tabla-usuarios th,
+  .tabla-usuarios td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .acciones {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
