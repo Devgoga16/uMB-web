@@ -271,6 +271,34 @@ function DetalleBot() {
     }
   };
 
+  const restaurarServicio = async () => {
+    if (!window.confirm('¿Estás seguro de que deseas restaurar el servicio? Asegúrate de que el pago haya sido realizado.')) {
+      return;
+    }
+
+    try {
+      await axios.post(
+        `${bot.url}/api/stats/restore-service`,
+        {},
+        {
+          headers: {
+            'accept': 'application/json',
+            'x-api-key': bot.apiKey
+          }
+        }
+      );
+
+      toast.success('Servicio restaurado exitosamente');
+      
+      // Recargar los datos para actualizar el estado
+      await cargarDatos();
+    } catch (error) {
+      console.error('Error al restaurar servicio:', error);
+      const errorMsg = error.response?.data?.message || 'Error al restaurar el servicio';
+      toast.error(errorMsg);
+    }
+  };
+
   const descargarFactura = async (billingRecord) => {
     try {
       const response = await axios.get(
@@ -562,13 +590,64 @@ function DetalleBot() {
       {summary && (
         <div className="seccion-card">
           <h2><Database size={20} /> Resumen General</h2>
-          <div className="summary-info">
-            <div className="summary-item">
-              <span className="summary-label">WhatsApp Conectado:</span>
-              <span className={summary.data?.account?.whatsappConnected ? 'text-success' : 'text-danger'}>
-                {summary.data?.account?.whatsappConnected ? 'Sí' : 'No'}
-              </span>
+          
+          {/* Estado de la Cuenta */}
+          {summary.data?.account && (
+            <div className="account-status-section">
+              <div className="account-status-grid">
+                <div className="account-status-item">
+                  <span className="summary-label">Estado de la Cuenta:</span>
+                  <span className={summary.data.account.active ? 'badge badge-success' : 'badge badge-danger'}>
+                    {summary.data.account.active ? '✓ Activa' : '✗ Inactiva'}
+                  </span>
+                </div>
+                
+                <div className="account-status-item">
+                  <span className="summary-label">Servicio:</span>
+                  <span className={summary.data.account.blocked ? 'badge badge-danger' : 'badge badge-success'}>
+                    {summary.data.account.blocked ? '✗ Bloqueado' : '✓ Operativo'}
+                  </span>
+                </div>
+
+                <div className="account-status-item">
+                  <span className="summary-label">WhatsApp Conectado:</span>
+                  <span className={summary.data.account.whatsappConnected ? 'badge badge-success' : 'badge badge-warning'}>
+                    {summary.data.account.whatsappConnected ? '✓ Conectado' : '✗ Desconectado'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Mensaje de bloqueo */}
+              {summary.data.account.blocked && summary.data.account.blockedReason && (
+                <div className="blocked-reason-alert">
+                  <XCircle size={20} />
+                  <div>
+                    <strong>Servicio Bloqueado</strong>
+                    <p>{summary.data.account.blockedReason}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Botón de restauración */}
+              {summary.data.account.blocked && (
+                <div className="restore-service-section">
+                  <button 
+                    className="btn-restore-service"
+                    onClick={restaurarServicio}
+                    title="Restaurar el servicio después de realizar el pago"
+                  >
+                    <CheckCircle size={18} />
+                    Restaurar Servicio
+                  </button>
+                  <p className="restore-service-note">
+                    * Usa este botón solo después de haber realizado el pago correspondiente
+                  </p>
+                </div>
+              )}
             </div>
+          )}
+
+          <div className="summary-info">
             <div className="summary-item">
               <span className="summary-label">Última Facturación:</span>
               <span>
