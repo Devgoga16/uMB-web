@@ -1,101 +1,68 @@
-/* Estilos personalizados para Toast notifications */
+/* ========================================
+   TOAST NOTIFICATIONS - MINIMALIST DESIGN
+   ======================================== */
 
 :root {
-  --toastify-color-light: #fff;
-  --toastify-color-dark: #121212;
-  --toastify-color-info: #3498db;
-  --toastify-color-success: #07bc0c;
-  --toastify-color-warning: #f1c40f;
-  --toastify-color-error: #e74c3c;
-  --toastify-color-transparent: rgba(255, 255, 255, 0.7);
-
-  --toastify-icon-color-info: var(--toastify-color-info);
-  --toastify-icon-color-success: var(--toastify-color-success);
-  --toastify-icon-color-warning: var(--toastify-color-warning);
-  --toastify-icon-color-error: var(--toastify-color-error);
-
-  --toastify-toast-width: 320px;
+  --toastify-toast-width: 360px;
   --toastify-toast-background: #fff;
-  --toastify-toast-min-height: 64px;
-  --toastify-toast-max-height: 800px;
-  --toastify-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --toastify-toast-min-height: 56px;
   --toastify-z-index: 9999;
-
-  --toastify-text-color-light: #2d3748;
-  --toastify-text-color-dark: #fff;
-
-  --toastify-text-color-info: #fff;
-  --toastify-text-color-success: #fff;
-  --toastify-text-color-warning: #fff;
-  --toastify-text-color-error: #fff;
-
-  --toastify-spinner-color: #616161;
-  --toastify-spinner-color-empty-area: #e0e0e0;
-
-  --toastify-color-progress-light: linear-gradient(
-    to right,
-    #4cd964,
-    #5ac8fa,
-    #007aff,
-    #34aadc,
-    #5856d6,
-    #ff2d55
-  );
-  --toastify-color-progress-dark: #bb86fc;
-  --toastify-color-progress-info: var(--toastify-color-info);
-  --toastify-color-progress-success: var(--toastify-color-success);
-  --toastify-color-progress-warning: var(--toastify-color-warning);
-  --toastify-color-progress-error: var(--toastify-color-error);
+  --toastify-font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* Estilos personalizados para las notificaciones */
 .Toastify__toast {
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  padding: 1rem 1.25rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-md) var(--space-lg);
   font-family: var(--toastify-font-family);
-  font-size: 0.95rem;
-  font-weight: 500;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  border: 1px solid;
 }
 
 .Toastify__toast--success {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--success);
 }
 
 .Toastify__toast--error {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--danger);
 }
 
 .Toastify__toast--info {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: white;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--info);
 }
 
 .Toastify__toast--warning {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-  color: white;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--warning);
 }
 
 .Toastify__progress-bar {
-  height: 4px;
+  height: 2px;
 }
 
 .Toastify__progress-bar--success {
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--success);
 }
 
 .Toastify__progress-bar--error {
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--danger);
 }
 
 .Toastify__progress-bar--info {
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--info);
 }
 
 .Toastify__progress-bar--warning {
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--warning);
 }
 
 .Toastify__close-button {

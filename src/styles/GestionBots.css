@@ -1,89 +1,65 @@
-/* Estilos para Página de Gestión de Bots - Diseño Moderno */
+/* ========================================
+   GESTIÓN BOTS - MINIMALIST DESIGN
+   ======================================== */
 
 .gestion-bots {
   padding: 0;
   max-width: 100%;
   margin: 0;
   height: 100%;
-  animation: fadeIn 0.4s ease-in;
+  animation: fadeIn 0.3s ease-out;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/* Header con gradiente y diseño moderno */
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 2.5rem;
-  gap: 1.5rem;
-  padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
-  position: relative;
-  overflow: hidden;
-}
-
-.page-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  opacity: 0.4;
-  pointer-events: none;
-}
-
-.page-header > div {
-  position: relative;
-  z-index: 1;
+  margin-bottom: var(--space-2xl);
+  gap: var(--space-lg);
+  padding-bottom: var(--space-xl);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .page-header h1 {
-  margin: 0 0 0.5rem 0;
-  color: #ffffff;
-  font-size: 2.25rem;
+  margin: 0 0 var(--space-xs) 0;
+  color: var(--text-primary);
+  font-size: 2rem;
   font-weight: 700;
-  letter-spacing: -0.5px;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  letter-spacing: -0.03em;
 }
 
 .subtitle {
   margin: 0;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.05rem;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
   font-weight: 400;
-  letter-spacing: 0.2px;
+  letter-spacing: -0.01em;
 }
 
 .page-content {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-lg);
 }
 
-/* Botones con diseño mejorado */
 .btn {
-  padding: 0.875rem 1.75rem;
-  border: none;
-  border-radius: 10px;
-  font-size: 1rem;
-  font-weight: 600;
+  padding: 0.625rem var(--space-xl);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-base);
   display: inline-flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: var(--space-sm);
   font-family: inherit;
-  position: relative;
-  z-index: 1;
-  letter-spacing: 0.3px;
+  letter-spacing: -0.01em;
 }
 
 .btn:disabled {
@@ -93,9 +69,16 @@
 }
 
 .btn-primary {
-  background: #ffffff;
-  color: #667eea;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-light);
+  border-color: var(--primary-light);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover:not(:disabled) {
