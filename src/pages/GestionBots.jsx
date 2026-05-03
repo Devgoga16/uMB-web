@@ -44,7 +44,8 @@ function GestionBots() {
               <p className="subtitle">Configura y administra todos tus bots</p>
             </div>
             <button onClick={handleNuevoBot} className="btn btn-primary">
-              <Plus size={18} /> Configurar Bot
+              <Plus size={18} />
+              <span>Configurar Bot</span>
             </button>
           </div>
 

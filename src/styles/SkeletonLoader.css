@@ -1,0 +1,148 @@
+/* ========================================
+   SKELETON LOADER - MODERN LOADING STATES
+   ======================================== */
+
+.skeleton-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  width: 100%;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 0%,
+    var(--bg-hover) 50%,
+    var(--bg-tertiary) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Skeleton Card */
+.skeleton-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.skeleton-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.skeleton-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.skeleton-text-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.skeleton-title {
+  height: 20px;
+  width: 60%;
+}
+
+.skeleton-subtitle {
+  height: 14px;
+  width: 40%;
+}
+
+.skeleton-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.skeleton-text {
+  height: 16px;
+  width: 100%;
+}
+
+.skeleton-text.short {
+  width: 70%;
+}
+
+.skeleton-footer {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.skeleton-button {
+  height: 32px;
+  width: 80px;
+  border-radius: var(--radius-md);
+}
+
+/* Skeleton Table Row */
+.skeleton-table-row {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1fr;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  align-items: center;
+}
+
+.skeleton-badge {
+  height: 24px;
+  width: 60px;
+  border-radius: var(--radius-full);
+}
+
+/* Skeleton Stat */
+.skeleton-stat {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.skeleton-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+}
+
+.skeleton-value {
+  height: 32px;
+  width: 80px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .skeleton-table-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+}

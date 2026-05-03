@@ -171,6 +171,121 @@
   transition: background 0.2s;
 }
 
+/* ========================================
+   DARK MODE - ENHANCED TEXT VISIBILITY
+   ======================================== */
+
+/* Container */
+[data-theme="dark"] .lista-usuarios {
+  background: var(--surface);
+  border: 2px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(148, 163, 184, 0.1);
+}
+
+/* Headers */
+[data-theme="dark"] .tabla-header {
+  background: rgba(30, 41, 59, 0.5);
+  border-bottom-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme="dark"] .tabla-header h3 {
+  color: #f1f5f9;
+}
+
+/* Table */
+[data-theme="dark"] .tabla-usuarios thead {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+[data-theme="dark"] .tabla-usuarios th {
+  color: #cbd5e1;
+  border-bottom-color: rgba(148, 163, 184, 0.3);
+}
+
+[data-theme="dark"] .tabla-usuarios td {
+  border-bottom-color: rgba(148, 163, 184, 0.2);
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .tabla-usuarios tbody tr:hover {
+  background-color: rgba(51, 65, 85, 0.5);
+}
+
+/* Badges - Light text on dark backgrounds */
+[data-theme="dark"] .badge-usuario {
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+  color: #dbeafe;
+}
+
+[data-theme="dark"] .badge-admin {
+  background: linear-gradient(135deg, #be123c 0%, #9f1239 100%);
+  color: #fce7f3;
+}
+
+[data-theme="dark"] .badge-activo {
+  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+  color: #d1fae5;
+}
+
+[data-theme="dark"] .badge-inactivo {
+  background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+  color: #fee2e2;
+}
+
+/* Buttons */
+[data-theme="dark"] .btn-icono {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .btn-icono:hover {
+  background: rgba(51, 65, 85, 0.5);
+}
+
+[data-theme="dark"] .btn-editar:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+[data-theme="dark"] .btn-eliminar:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+[data-theme="dark"] .btn-activar:hover {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+[data-theme="dark"] .btn-desactivar:hover {
+  background: rgba(245, 158, 11, 0.2);
+}
+
+/* States */
+[data-theme="dark"] .loading-container {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .spinner {
+  border-color: rgba(51, 65, 85, 0.5);
+  border-top-color: #8b5cf6;
+}
+
+[data-theme="dark"] .error-container {
+  background: rgba(127, 29, 29, 0.2);
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+}
+
+[data-theme="dark"] .error-message {
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .btn-retry {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  box-shadow: 0 4px 12px -2px rgba(139, 92, 246, 0.4);
+}
+
+[data-theme="dark"] .btn-retry:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+}
+
 .btn-retry:hover {
   background: #1565c0;
 }

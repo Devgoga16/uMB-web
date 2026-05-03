@@ -17,16 +17,24 @@ import {
   Send,
   Code,
   FileText,
-  Trash2
+  Trash2,
+  RefreshCw,
+  ExternalLink,
+  Key,
+  BarChart3,
+  FileCode2,
+  CreditCard,
+  Zap
 } from 'lucide-react';
 import axios from 'axios';
 import botService from '../services/botService';
 import Modal from '../components/Modal';
 import Layout from '../components/Layout';
+import SkeletonLoader from '../components/SkeletonLoader';
 import '../styles/DetalleBot.css';
 
 /**
- * Página de detalles y estadísticas del bot
+ * Página de detalles y estadísticas del bot - REDISEÑADA
  */
 function DetalleBot() {
   const { id } = useParams();
@@ -40,6 +48,8 @@ function DetalleBot() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mostrarApiKey, setMostrarApiKey] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview'); // nuevo estado para tabs
+  const [refreshing, setRefreshing] = useState(false);
   
   // Estados para el modal de WhatsApp
   const [modalWhatsApp, setModalWhatsApp] = useState(false);
@@ -59,6 +69,7 @@ function DetalleBot() {
   }, [id]);
 
   const cargarDatos = async () => {
+    if (!loading) setRefreshing(true);
     setLoading(true);
     setError(null);
 
@@ -70,6 +81,7 @@ function DetalleBot() {
       if (!botEncontrado) {
         setError('Bot no encontrado');
         setLoading(false);
+        setRefreshing(false);
         return;
       }
 
@@ -113,6 +125,7 @@ function DetalleBot() {
       setError('Error al cargar información del bot');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -377,12 +390,11 @@ function DetalleBot() {
     toast.success('Comando curl copiado al portapapeles');
   };
 
-  if (loading) {
+  if (loading && !bot) {
     return (
       <Layout>
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Cargando información del bot...</p>
+        <div className="detalle-bot-container">
+          <SkeletonLoader type="card" count={4} />
         </div>
       </Layout>
     );
@@ -392,9 +404,10 @@ function DetalleBot() {
     return (
       <Layout>
         <div className="error-container">
+          <XCircle size={48} />
           <p className="error-message">{error || 'Bot no encontrado'}</p>
           <button onClick={() => navigate('/bots')} className="btn btn-primary">
-            Volver a Bots
+            <ArrowLeft size={18} /> Volver a Bots
           </button>
         </div>
       </Layout>
@@ -404,378 +417,604 @@ function DetalleBot() {
   return (
     <Layout>
       <div className="detalle-bot-container">
-        <div className="detalle-header">
-        <button onClick={() => navigate('/bots')} className="btn-volver">
-          <ArrowLeft size={20} /> Volver
-        </button>
-        <h1>{bot.nombre}</h1>
-        <span className={`badge-estado badge-${bot.estado}`}>{bot.estado}</span>
-        <button 
-          onClick={() => window.open(`${bot.url}/api-docs`, '_blank')} 
-          className="btn btn-primary"
-          style={{ marginLeft: 'auto' }}
-        >
-          Ir a Swagger
-        </button>
-      </div>
+        {/* Header Moderno */}
+        <div className="detalle-header-modern">
+          <div className="header-top">
+            <button onClick={() => navigate('/bots')} className="btn-back">
+              <ArrowLeft size={20} />
+            </button>
+            
+            <div className="bot-title-section">
+              <h1>{bot.nombre}</h1>
+              <span className={`status-badge status-${bot.estado}`}>
+                <Activity size={14} />
+                {bot.estado === 'activo' ? 'Activo' : 'Inactivo'}
+              </span>
+            </div>
 
-      {/* API Key */}
-      <div className="seccion-card api-key-section">
-        <h2>API Key</h2>
-        <div className="api-key-container">
-          <div className="api-key-display">
-            <code>{mostrarApiKey ? bot.apiKey : '•'.repeat(32)}</code>
+            <div className="header-actions">
+              <button 
+                onClick={cargarDatos}
+                className="btn-icon-action"
+                disabled={refreshing}
+                title="Refrescar datos"
+              >
+                <RefreshCw size={18} className={refreshing ? 'spinning' : ''} />
+              </button>
+              <button 
+                onClick={() => window.open(`${bot.url}/api-docs`, '_blank')} 
+                className="btn-action btn-swagger"
+              >
+                <ExternalLink size={18} />
+                <span>API Docs</span>
+              </button>
+              <button 
+                onClick={abrirModalWhatsApp}
+                className="btn-action btn-test"
+              >
+                <Send size={18} />
+                <span>Probar Envío</span>
+              </button>
+            </div>
           </div>
-          <div className="api-key-actions">
-            <button 
-              onClick={() => setMostrarApiKey(!mostrarApiKey)}
-              className="btn-icon"
-              title={mostrarApiKey ? 'Ocultar' : 'Mostrar'}
-            >
-              {mostrarApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-            <button 
-              onClick={copiarApiKey}
-              className="btn-icon"
-              title="Copiar"
-            >
-              <Copy size={18} />
-            </button>
+
+          {/* Quick Stats */}
+          <div className="quick-stats">
+            {health && (
+              <>
+                <div className="quick-stat">
+                  <div className={`stat-icon ${health.checks?.api === 'ok' ? 'success' : 'danger'}`}>
+                    {health.checks?.api === 'ok' ? <CheckCircle size={20} /> : <XCircle size={20} />}
+                  </div>
+                  <div className="stat-info">
+                    <span className="stat-label">API</span>
+                    <span className="stat-value">{health.checks?.api || 'N/A'}</span>
+                  </div>
+                </div>
+                <div className="quick-stat">
+                  <div className={`stat-icon ${health.checks?.database === 'ok' ? 'success' : 'danger'}`}>
+                    <Database size={20} />
+                  </div>
+                  <div className="stat-info">
+                    <span className="stat-label">Database</span>
+                    <span className="stat-value">{health.checks?.database || 'N/A'}</span>
+                  </div>
+                </div>
+                <div className="quick-stat">
+                  <div className={`stat-icon ${health.checks?.whatsapp === 'connected' ? 'success' : 'danger'}`}>
+                    <MessageSquare size={20} />
+                  </div>
+                  <div className="stat-info">
+                    <span className="stat-label">WhatsApp</span>
+                    <span className="stat-value">{health.checks?.whatsapp || 'N/A'}</span>
+                  </div>
+                </div>
+                <div className="quick-stat">
+                  <div className={`stat-icon ${health.checks?.email === 'ok' ? 'success' : 'danger'}`}>
+                    <Mail size={20} />
+                  </div>
+                  <div className="stat-info">
+                    <span className="stat-label">Email</span>
+                    <span className="stat-value">{health.checks?.email || 'N/A'}</span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
-        <button 
-          onClick={abrirModalWhatsApp}
-          className="btn btn-primary"
-          style={{ marginTop: '1rem' }}
-        >
-          <Send size={18} style={{ marginRight: '0.5rem' }} />
-          Probar Envío WhatsApp
-        </button>
-      </div>
 
-      {/* Estado de Salud */}
-      {health && (
-        <div className="seccion-card">
-          <h2><Activity size={20} /> Estado de Salud</h2>
-          <div className="health-grid">
-            <div className="health-item">
-              <span className="health-label">API</span>
-              <span className={`health-status status-${health.checks?.api}`}>
-                {health.checks?.api === 'ok' ? <CheckCircle size={16} /> : <XCircle size={16} />}
-                {health.checks?.api || 'N/A'}
-              </span>
-            </div>
-            <div className="health-item">
-              <span className="health-label">Base de Datos</span>
-              <span className={`health-status status-${health.checks?.database}`}>
-                {health.checks?.database === 'ok' ? <CheckCircle size={16} /> : <XCircle size={16} />}
-                {health.checks?.database || 'N/A'}
-              </span>
-            </div>
-            <div className="health-item">
-              <span className="health-label">WhatsApp</span>
-              <span className={`health-status status-${health.checks?.whatsapp}`}>
-                {health.checks?.whatsapp === 'connected' ? <CheckCircle size={16} /> : <XCircle size={16} />}
-                {health.checks?.whatsapp || 'N/A'}
-              </span>
-            </div>
-            <div className="health-item">
-              <span className="health-label">Email</span>
-              <span className={`health-status status-${health.checks?.email}`}>
-                {health.checks?.email === 'ok' ? <CheckCircle size={16} /> : <XCircle size={16} />}
-                {health.checks?.email || 'N/A'}
-              </span>
-            </div>
-          </div>
-
-          <div className="account-status">
-            <div className="status-item">
-              <span>Cuenta Activa:</span>
-              <span className={health.account?.active ? 'text-success' : 'text-danger'}>
-                {health.account?.active ? 'Sí' : 'No'}
-              </span>
-            </div>
-            <div className="status-item">
-              <span>Bloqueada:</span>
-              <span className={health.account?.blocked ? 'text-danger' : 'text-success'}>
-                {health.account?.blocked ? 'Sí' : 'No'}
-              </span>
-            </div>
-          </div>
+        {/* Tabs de Navegación */}
+        <div className="tabs-navigation">
+          <button 
+            className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
+            onClick={() => setActiveTab('overview')}
+          >
+            <BarChart3 size={18} />
+            <span>Vista General</span>
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'usage' ? 'active' : ''}`}
+            onClick={() => setActiveTab('usage')}
+          >
+            <TrendingUp size={18} />
+            <span>Uso Actual</span>
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'billing' ? 'active' : ''}`}
+            onClick={() => setActiveTab('billing')}
+          >
+            <CreditCard size={18} />
+            <span>Facturación</span>
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'api' ? 'active' : ''}`}
+            onClick={() => setActiveTab('api')}
+          >
+            <Key size={18} />
+            <span>API & Docs</span>
+          </button>
         </div>
-      )}
 
-      {/* Uso del Mes Actual */}
-      <div className="seccion-card">
-        <h2><TrendingUp size={20} /> Uso del Mes Actual</h2>
-        {usage && (
-          <>
-            <div className="mes-actual">
-              <Calendar size={16} />
-              <span>{usage.data?.month || 'N/A'}</span>
-            </div>
-
-            <div className="usage-grid">
-              <div className="usage-card">
-                <div className="usage-icon whatsapp">
-                  <MessageSquare size={24} />
-                </div>
-                <h3>WhatsApp</h3>
-                <div className="usage-stats">
-                  <div className="stat-row">
-                    <span className="stat-label">Enviados:</span>
-                    <span className="stat-value">{usage.data?.whatsapp?.sent || 0}</span>
-                  </div>
-                  <div className="stat-row">
-                    <span className="stat-label">Límite:</span>
-                    <span className="stat-value">{usage.data?.whatsapp?.limit || 0}</span>
-                  </div>
-                  <div className="stat-row">
-                    <span className="stat-label">Restantes:</span>
-                    <span className="stat-value highlight">{usage.data?.whatsapp?.remaining || 0}</span>
-                  </div>
-                  <div className="stat-row">
-                    <span className="stat-label">Extras:</span>
-                    <span className="stat-value">{usage.data?.whatsapp?.extra || 0}</span>
-                  </div>
-                </div>
-                <div className="progress-bar">
-                  <div 
-                    className="progress-fill whatsapp"
-                    style={{ 
-                      width: `${((usage.data?.whatsapp?.sent || 0) / (usage.data?.whatsapp?.limit || 1)) * 100}%` 
-                    }}
-                  ></div>
-                </div>
-              </div>
-
-              <div className="usage-card">
-                <div className="usage-icon email">
-                  <Mail size={24} />
-                </div>
-                <h3>Correos</h3>
-                <div className="usage-stats">
-                  <div className="stat-row">
-                    <span className="stat-label">Enviados:</span>
-                    <span className="stat-value">{usage.data?.email?.sent || 0}</span>
-                  </div>
-                  <div className="stat-row">
-                    <span className="stat-label">Límite:</span>
-                    <span className="stat-value">{usage.data?.email?.limit || 0}</span>
-                  </div>
-                  <div className="stat-row">
-                    <span className="stat-label">Restantes:</span>
-                    <span className="stat-value highlight">{usage.data?.email?.remaining || 0}</span>
-                  </div>
-                  <div className="stat-row">
-                    <span className="stat-label">Extras:</span>
-                    <span className="stat-value">{usage.data?.email?.extra || 0}</span>
-                  </div>
-                </div>
-                <div className="progress-bar">
-                  <div 
-                    className="progress-fill email"
-                    style={{ 
-                      width: `${((usage.data?.email?.sent || 0) / (usage.data?.email?.limit || 1)) * 100}%` 
-                    }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Resumen */}
-      {summary && (
-        <div className="seccion-card">
-          <h2><Database size={20} /> Resumen General</h2>
+        {/* Contenido de los Tabs */}
+        <div className="tab-content">
           
-          {/* Estado de la Cuenta */}
-          {summary.data?.account && (
-            <div className="account-status-section">
-              <div className="account-status-grid">
-                <div className="account-status-item">
-                  <span className="summary-label">Estado de la Cuenta:</span>
-                  <span className={summary.data.account.active ? 'badge badge-success' : 'badge badge-danger'}>
-                    {summary.data.account.active ? '✓ Activa' : '✗ Inactiva'}
-                  </span>
-                </div>
-                
-                <div className="account-status-item">
-                  <span className="summary-label">Servicio:</span>
-                  <span className={summary.data.account.blocked ? 'badge badge-danger' : 'badge badge-success'}>
-                    {summary.data.account.blocked ? '✗ Bloqueado' : '✓ Operativo'}
-                  </span>
-                </div>
-
-                <div className="account-status-item">
-                  <span className="summary-label">WhatsApp Conectado:</span>
-                  <span className={summary.data.account.whatsappConnected ? 'badge badge-success' : 'badge badge-warning'}>
-                    {summary.data.account.whatsappConnected ? '✓ Conectado' : '✗ Desconectado'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Mensaje de bloqueo */}
-              {summary.data.account.blocked && summary.data.account.blockedReason && (
-                <div className="blocked-reason-alert">
-                  <XCircle size={20} />
-                  <div>
-                    <strong>Servicio Bloqueado</strong>
-                    <p>{summary.data.account.blockedReason}</p>
+          {/* TAB: VISTA GENERAL */}
+          {activeTab === 'overview' && (
+            <div className="tab-panel fade-in">
+              {/* Account Status Alert */}
+              {summary?.data?.account && (
+                <div className={`account-alert ${summary.data.account.blocked ? 'blocked' : 'active'}`}>
+                  <div className="alert-icon">
+                    {summary.data.account.blocked ? <XCircle size={24} /> : <CheckCircle size={24} />}
+                  </div>
+                  <div className="alert-content">
+                    <h3>{summary.data.account.blocked ? 'Servicio Bloqueado' : 'Servicio Operativo'}</h3>
+                    <p>
+                      {summary.data.account.blocked 
+                        ? summary.data.account.blockedReason || 'El servicio ha sido suspendido'
+                        : 'Todos los sistemas funcionando correctamente'}
+                    </p>
+                    {summary.data.account.blocked && (
+                      <button 
+                        className="btn-restore"
+                        onClick={restaurarServicio}
+                      >
+                        <Zap size={18} />
+                        Restaurar Servicio
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
 
-              {/* Botón de restauración */}
-              {summary.data.account.blocked && (
-                <div className="restore-service-section">
-                  <button 
-                    className="btn-restore-service"
-                    onClick={restaurarServicio}
-                    title="Restaurar el servicio después de realizar el pago"
-                  >
-                    <CheckCircle size={18} />
-                    Restaurar Servicio
-                  </button>
-                  <p className="restore-service-note">
-                    * Usa este botón solo después de haber realizado el pago correspondiente
-                  </p>
+              {/* Metrics Grid */}
+              <div className="metrics-grid">
+                <div className="metric-card whatsapp">
+                  <div className="metric-header">
+                    <MessageSquare size={24} />
+                    <h3>WhatsApp</h3>
+                  </div>
+                  {usage?.data && (
+                    <>
+                      <div className="metric-value">
+                        <span className="big-number">{usage.data.whatsapp?.sent || 0}</span>
+                        <span className="metric-label">/ {usage.data.whatsapp?.limit || 0} mensajes</span>
+                      </div>
+                      <div className="metric-stats">
+                        <div className="stat-item">
+                          <span className="stat-label">Restantes</span>
+                          <span className="stat-number success">{usage.data.whatsapp?.remaining || 0}</span>
+                        </div>
+                        <div className="stat-item">
+                          <span className="stat-label">Extras</span>
+                          <span className="stat-number warning">{usage.data.whatsapp?.extra || 0}</span>
+                        </div>
+                      </div>
+                      <div className="progress-bar-modern">
+                        <div 
+                          className="progress-fill whatsapp-fill"
+                          style={{ 
+                            width: `${Math.min(((usage.data.whatsapp?.sent || 0) / (usage.data.whatsapp?.limit || 1)) * 100, 100)}%` 
+                          }}
+                        ></div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="metric-card email">
+                  <div className="metric-header">
+                    <Mail size={24} />
+                    <h3>Email</h3>
+                  </div>
+                  {usage?.data && (
+                    <>
+                      <div className="metric-value">
+                        <span className="big-number">{usage.data.email?.sent || 0}</span>
+                        <span className="metric-label">/ {usage.data.email?.limit || 0} correos</span>
+                      </div>
+                      <div className="metric-stats">
+                        <div className="stat-item">
+                          <span className="stat-label">Restantes</span>
+                          <span className="stat-number success">{usage.data.email?.remaining || 0}</span>
+                        </div>
+                        <div className="stat-item">
+                          <span className="stat-label">Extras</span>
+                          <span className="stat-number warning">{usage.data.email?.extra || 0}</span>
+                        </div>
+                      </div>
+                      <div className="progress-bar-modern">
+                        <div 
+                          className="progress-fill email-fill"
+                          style={{ 
+                            width: `${Math.min(((usage.data.email?.sent || 0) / (usage.data.email?.limit || 1)) * 100, 100)}%` 
+                          }}
+                        ></div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Current Period Info */}
+              {usage?.data && (
+                <div className="period-card">
+                  <div className="period-header">
+                    <Calendar size={20} />
+                    <h3>Período Actual</h3>
+                  </div>
+                  <div className="period-info">
+                    <div className="period-month">{usage.data.month}</div>
+                    {summary?.data?.lastBilling && (
+                      <div className="period-cost">
+                        <span>Última facturación:</span>
+                        <strong>S/ {summary.data.lastBilling.totalCost?.toFixed(2) || '0.00'}</strong>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
           )}
 
-          <div className="summary-info">
-            <div className="summary-item">
-              <span className="summary-label">Última Facturación:</span>
-              <span>
-                {summary.data?.lastBilling 
-                  ? `${summary.data.lastBilling.month} - S/ ${summary.data.lastBilling.totalCost?.toFixed(2) || '0.00'}`
-                  : 'Sin facturación'
-                }
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+          {/* TAB: USO ACTUAL */}
+          {activeTab === 'usage' && (
+            <div className="tab-panel fade-in">
+              {usage?.data ? (
+                <>
+                  <div className="usage-header-section">
+                    <div className="period-badge">
+                      <Calendar size={18} />
+                      <span>{usage.data.month}</span>
+                    </div>
+                  </div>
 
-      {/* Historial de Facturación */}
-      {billing && billing.data && billing.data.length > 0 && (
-        <div className="seccion-card">
-          <h2><Database size={20} /> Historial de Facturación</h2>
-          <div className="billing-table-container">
-            <table className="billing-table">
-              <thead>
-                <tr>
-                  <th>Mes</th>
-                  <th>WhatsApp</th>
-                  <th>Correos</th>
-                  <th>Plan Base</th>
-                  <th>Extras</th>
-                  <th>Total</th>
-                  <th>Estado</th>
-                  <th>Factura</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {billing.data.map((record) => (
-                  <tr key={record._id}>
-                    <td className="billing-month">{record.month}</td>
-                    <td>
-                      <div className="billing-usage">
-                        <span className="usage-main">{record.whatsappMessagesSent}</span>
-                        {record.whatsappExtraMessages > 0 && (
-                          <span className="usage-extra">+{record.whatsappExtraMessages} extra</span>
-                        )}
+                  <div className="usage-cards-grid">
+                    <div className="usage-detail-card">
+                      <div className="usage-card-header whatsapp-gradient">
+                        <MessageSquare size={32} />
+                        <h3>WhatsApp</h3>
                       </div>
-                    </td>
-                    <td>
-                      <div className="billing-usage">
-                        <span className="usage-main">{record.emailsSent}</span>
-                        {record.emailsExtra > 0 && (
-                          <span className="usage-extra">+{record.emailsExtra} extra</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="billing-cost">S/ {record.basePlanCost.toFixed(2)}</td>
-                    <td className="billing-cost">
-                      {(record.extraWhatsappCost + record.extraEmailCost) > 0 
-                        ? `S/ ${(record.extraWhatsappCost + record.extraEmailCost).toFixed(2)}`
-                        : '-'
-                      }
-                    </td>
-                    <td className="billing-total">S/ {record.totalCost.toFixed(2)}</td>
-                    <td>
-                      <span className={`badge badge-billing badge-${record.status}`}>
-                        {record.status === 'invoiced' ? 'Facturado' : 
-                         record.status === 'paid' ? 'Pagado' : 
-                         record.status === 'pending' ? 'Pendiente' : record.status}
-                      </span>
-                    </td>
-                    <td className="billing-invoice">
-                      <div className="invoice-status">
-                        {record.invoiceGenerated && (
-                          <span className="invoice-check" title="Factura generada">
-                            <CheckCircle size={16} />
-                          </span>
-                        )}
-                        {record.invoiceUploaded && (
-                          <span className="invoice-check uploaded" title="Factura subida">
-                            <CheckCircle size={16} />
-                          </span>
-                        )}
-                        {record.paymentReceived && (
-                          <span className="invoice-check paid" title="Pago recibido">
-                            <CheckCircle size={16} />
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="billing-actions">
-                      {!record.invoiceUploaded ? (
-                        <button
-                          onClick={() => abrirModalFactura(record)}
-                          className="btn-upload-invoice"
-                          title="Subir factura PDF"
-                        >
-                          Subir PDF
-                        </button>
-                      ) : (
-                        <div className="actions-group">
-                          <span className="uploaded-label">✓ Subida</span>
-                          <div className="invoice-actions-buttons">
-                            <button
-                              onClick={() => descargarFactura(record)}
-                              className="btn-download-invoice"
-                              title="Ver/Descargar factura"
-                            >
-                              <FileText size={16} /> Ver
-                            </button>
-                            <button
-                              onClick={() => eliminarFactura(record)}
-                              className="btn-delete-invoice"
-                              title="Eliminar factura"
-                            >
-                              <Trash2 size={16} /> Eliminar
-                            </button>
+                      <div className="usage-card-body">
+                        <div className="usage-stat-row">
+                          <span>Enviados</span>
+                          <strong>{usage.data.whatsapp?.sent || 0}</strong>
+                        </div>
+                        <div className="usage-stat-row">
+                          <span>Límite del plan</span>
+                          <strong>{usage.data.whatsapp?.limit || 0}</strong>
+                        </div>
+                        <div className="usage-stat-row highlight">
+                          <span>Disponibles</span>
+                          <strong className="success-text">{usage.data.whatsapp?.remaining || 0}</strong>
+                        </div>
+                        <div className="usage-stat-row">
+                          <span>Mensajes extra</span>
+                          <strong className="warning-text">{usage.data.whatsapp?.extra || 0}</strong>
+                        </div>
+                        <div className="usage-progress">
+                          <div className="progress-info">
+                            <span>Uso del plan</span>
+                            <span>{Math.round(((usage.data.whatsapp?.sent || 0) / (usage.data.whatsapp?.limit || 1)) * 100)}%</span>
+                          </div>
+                          <div className="progress-bar-large">
+                            <div 
+                              className="progress-fill-large whatsapp-fill"
+                              style={{ 
+                                width: `${Math.min(((usage.data.whatsapp?.sent || 0) / (usage.data.whatsapp?.limit || 1)) * 100, 100)}%` 
+                              }}
+                            ></div>
                           </div>
                         </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+                      </div>
+                    </div>
 
-      <button onClick={cargarDatos} className="btn btn-secondary btn-refresh">
-        Refrescar Datos
-      </button>
+                    <div className="usage-detail-card">
+                      <div className="usage-card-header email-gradient">
+                        <Mail size={32} />
+                        <h3>Email</h3>
+                      </div>
+                      <div className="usage-card-body">
+                        <div className="usage-stat-row">
+                          <span>Enviados</span>
+                          <strong>{usage.data.email?.sent || 0}</strong>
+                        </div>
+                        <div className="usage-stat-row">
+                          <span>Límite del plan</span>
+                          <strong>{usage.data.email?.limit || 0}</strong>
+                        </div>
+                        <div className="usage-stat-row highlight">
+                          <span>Disponibles</span>
+                          <strong className="success-text">{usage.data.email?.remaining || 0}</strong>
+                        </div>
+                        <div className="usage-stat-row">
+                          <span>Correos extra</span>
+                          <strong className="warning-text">{usage.data.email?.extra || 0}</strong>
+                        </div>
+                        <div className="usage-progress">
+                          <div className="progress-info">
+                            <span>Uso del plan</span>
+                            <span>{Math.round(((usage.data.email?.sent || 0) / (usage.data.email?.limit || 1)) * 100)}%</span>
+                          </div>
+                          <div className="progress-bar-large">
+                            <div 
+                              className="progress-fill-large email-fill"
+                              style={{ 
+                                width: `${Math.min(((usage.data.email?.sent || 0) / (usage.data.email?.limit || 1)) * 100, 100)}%` 
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="empty-state">
+                  <TrendingUp size={48} />
+                  <p>No hay datos de uso disponibles</p>
+                </div>
+              )}
+            </div>
+          )}
+          {/* TAB: FACTURACIÓN */}
+          {activeTab === 'billing' && (
+            <div className="tab-panel fade-in">
+              {billing && billing.data && billing.data.length > 0 ? (
+                <div className="billing-modern-container">
+                  <div className="billing-table-wrapper">
+                    <table className="billing-table-modern">
+                      <thead>
+                        <tr>
+                          <th>Período</th>
+                          <th>WhatsApp</th>
+                          <th>Email</th>
+                          <th>Plan Base</th>
+                          <th>Extras</th>
+                          <th className="total-column">Total</th>
+                          <th>Estado</th>
+                          <th>Factura</th>
+                          <th className="actions-column">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {billing.data.map((record) => (
+                          <tr key={record._id} className="billing-row">
+                            <td className="period-cell">
+                              <Calendar size={14} />
+                              <span>{record.month}</span>
+                            </td>
+                            <td>
+                              <div className="usage-cell">
+                                <span className="usage-number">{record.whatsappMessagesSent}</span>
+                                {record.whatsappExtraMessages > 0 && (
+                                  <span className="usage-extra">+{record.whatsappExtraMessages}</span>
+                                )}
+                              </div>
+                            </td>
+                            <td>
+                              <div className="usage-cell">
+                                <span className="usage-number">{record.emailsSent}</span>
+                                {record.emailsExtra > 0 && (
+                                  <span className="usage-extra">+{record.emailsExtra}</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="cost-cell">S/ {record.basePlanCost.toFixed(2)}</td>
+                            <td className="cost-cell">
+                              {(record.extraWhatsappCost + record.extraEmailCost) > 0 
+                                ? `S/ ${(record.extraWhatsappCost + record.extraEmailCost).toFixed(2)}`
+                                : '-'
+                              }
+                            </td>
+                            <td className="total-cell">
+                              <strong>S/ {record.totalCost.toFixed(2)}</strong>
+                            </td>
+                            <td>
+                              <span className={`badge-status status-${record.status}`}>
+                                {record.status === 'invoiced' ? 'Facturado' : 
+                                 record.status === 'paid' ? 'Pagado' : 
+                                 record.status === 'pending' ? 'Pendiente' : record.status}
+                              </span>
+                            </td>
+                            <td className="invoice-indicators">
+                              {record.invoiceGenerated && (
+                                <div className="indicator generated" title="Generada">
+                                  <CheckCircle size={14} />
+                                </div>
+                              )}
+                              {record.invoiceUploaded && (
+                                <div className="indicator uploaded" title="Subida">
+                                  <FileText size={14} />
+                                </div>
+                              )}
+                              {record.paymentReceived && (
+                                <div className="indicator paid" title="Pagada">
+                                  <CheckCircle size={14} />
+                                </div>
+                              )}
+                            </td>
+                            <td className="actions-cell">
+                              {!record.invoiceUploaded ? (
+                                <button
+                                  onClick={() => abrirModalFactura(record)}
+                                  className="btn-action-table upload"
+                                >
+                                  <FileText size={14} />
+                                  Subir
+                                </button>
+                              ) : (
+                                <div className="action-buttons-group">
+                                  <button
+                                    onClick={() => descargarFactura(record)}
+                                    className="btn-action-table view"
+                                    title="Ver/Descargar"
+                                  >
+                                    <FileText size={14} />
+                                  </button>
+                                  <button
+                                    onClick={() => eliminarFactura(record)}
+                                    className="btn-action-table delete"
+                                    title="Eliminar"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <CreditCard size={48} />
+                  <p>No hay historial de facturación disponible</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB: API & DOCUMENTACIÓN */}
+          {activeTab === 'api' && (
+            <div className="tab-panel fade-in">
+              {/* API Key Section */}
+              <div className="api-key-card-modern">
+                <div className="api-key-header">
+                  <div className="header-left">
+                    <Key size={24} />
+                    <div>
+                      <h3>API Key</h3>
+                      <p>Usa esta clave para autenticar tus solicitudes</p>
+                    </div>
+                  </div>
+                  <div className="header-actions">
+                    <button 
+                      onClick={() => setMostrarApiKey(!mostrarApiKey)}
+                      className="btn-icon-modern"
+                      title={mostrarApiKey ? 'Ocultar' : 'Mostrar'}
+                    >
+                      {mostrarApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                    <button 
+                      onClick={copiarApiKey}
+                      className="btn-icon-modern"
+                      title="Copiar"
+                    >
+                      <Copy size={18} />
+                    </button>
+                  </div>
+                </div>
+                <div className="api-key-display-modern">
+                  <code>{mostrarApiKey ? bot.apiKey : '•'.repeat(bot.apiKey.length)}</code>
+                </div>
+              </div>
+
+              {/* cURL Examples */}
+              <div className="curl-examples-card">
+                <div className="curl-card-header">
+                  <Code size={20} />
+                  <h3>Ejemplos de Uso</h3>
+                </div>
+
+                <div className="example-section">
+                  <h4>
+                    <MessageSquare size={18} />
+                    Enviar WhatsApp
+                  </h4>
+                  <div className="code-block-header">
+                    <span>POST {bot.url}/api/whatsapp/send</span>
+                    <button onClick={copiarCurl} className="btn-copy-code">
+                      <Copy size={14} />
+                      Copiar
+                    </button>
+                  </div>
+                  <pre className="code-block">
+{`curl -X 'POST' \\
+  '${bot.url}/api/whatsapp/send' \\
+  -H 'accept: */*' \\
+  -H 'x-api-key: ${bot.apiKey}' \\
+  -H 'Content-Type: application/json' \\
+  -d '{
+  "to": "955768897",
+  "message": "Hola, este es un mensaje de prueba"
+}'`}
+                  </pre>
+                </div>
+
+                <div className="api-info-grid">
+                  <div className="info-card">
+                    <h5>Headers Requeridos</h5>
+                    <ul>
+                      <li><code>x-api-key</code>: Tu API Key</li>
+                      <li><code>Content-Type</code>: application/json</li>
+                      <li><code>accept</code>: */*</li>
+                    </ul>
+                  </div>
+                  <div className="info-card">
+                    <h5>Parámetros del Body</h5>
+                    <ul>
+                      <li><code>to</code>: Número sin código de país</li>
+                      <li><code>message</code>: Texto del mensaje</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="test-section">
+                  <h4>Probar Envío</h4>
+                  <p>Prueba tu configuración enviando un mensaje de prueba directamente desde aquí</p>
+                  <button 
+                    onClick={abrirModalWhatsApp}
+                    className="btn-test-large"
+                  >
+                    <Send size={18} />
+                    Abrir Formulario de Prueba
+                  </button>
+                </div>
+              </div>
+
+              {/* External Links */}
+              <div className="docs-links-card">
+                <h3>
+                  <FileCode2 size={20} />
+                  Documentación y Recursos
+                </h3>
+                <div className="links-grid">
+                  <a 
+                    href={`${bot.url}/api-docs`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="doc-link swagger"
+                  >
+                    <div className="link-icon">
+                      <ExternalLink size={20} />
+                    </div>
+                    <div className="link-content">
+                      <h4>Swagger UI</h4>
+                      <p>Documentación interactiva de la API</p>
+                    </div>
+                  </a>
+                  <a 
+                    href={`${bot.url}/api/health`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="doc-link health"
+                  >
+                    <div className="link-icon">
+                      <Activity size={20} />
+                    </div>
+                    <div className="link-content">
+                      <h4>Health Check</h4>
+                      <p>Estado en tiempo real de los servicios</p>
+                    </div>
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Modal de Prueba WhatsApp */}

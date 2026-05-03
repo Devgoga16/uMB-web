@@ -8,6 +8,7 @@ import {
   Bot
 } from 'lucide-react';
 import authService from '../services/authService';
+import ThemeToggle from './ThemeToggle';
 
 /**
  * Componente Sidebar reutilizable para toda la aplicación
@@ -68,10 +69,13 @@ function Sidebar() {
             <p className="user-role">{authService.esAdmin() ? 'Administrador' : 'Usuario'}</p>
           </div>
         </div>
-        <button onClick={handleLogout} className="logout-button">
-          <LogOut size={18} />
-          Cerrar Sesión
-        </button>
+        <div className="sidebar-actions">
+          <ThemeToggle />
+          <button onClick={handleLogout} className="logout-button">
+            <LogOut size={18} />
+            Cerrar Sesión
+          </button>
+        </div>
       </div>
     </aside>
   );

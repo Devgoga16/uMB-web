@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Bot, Settings, Power, Trash2, Edit, FileCode, Search, Filter, Grid, List, SortAsc } from 'lucide-react';
 import botService from '../../services/botService';
 import ModalEnv from './ModalEnv';
+import SkeletonLoader from '../SkeletonLoader';
 import '../../styles/ListaBots.css';
 
 /**
@@ -131,12 +132,7 @@ function ListaBots({ onEdit, onRefresh }) {
   }, [bots, busqueda, filtroEstado, ordenamiento]);
 
   if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Cargando bots...</p>
-      </div>
-    );
+    return <SkeletonLoader type="card" count={3} />;
   }
 
   if (error) {

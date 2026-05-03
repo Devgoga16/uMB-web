@@ -40,7 +40,7 @@
 
 .search-box:focus-within {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.05);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .search-box svg {
@@ -175,28 +175,50 @@
 .bot-card {
   background: var(--bg-primary);
   border: 1px solid var(--border-medium);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   padding: var(--space-xl);
   transition: all var(--transition-base);
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
   position: relative;
+  overflow: hidden;
+}
+
+.bot-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-primary);
+  opacity: 0;
+  transition: opacity var(--transition-base);
 }
 
 .bot-card:hover {
-  border-color: var(--border-dark);
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-colored);
+  transform: translateY(-4px);
 }
 
-.bot-card.activo {
-  border-color: var(--success);
-  background: linear-gradient(to bottom, #f0fdf4 0%, var(--bg-primary) 100%);
+.bot-card:hover::before {
+  opacity: 1;
+}
+
+.bot-card.activo::before {
+  background: var(--gradient-success);
+  opacity: 1;
 }
 
 .bot-card.inactivo {
-  opacity: 0.6;
+  opacity: 0.7;
+}
+
+.bot-card.inactivo::before {
+  background: var(--border-medium);
+  opacity: 1;
 }
 
 .bot-card-header {
@@ -210,17 +232,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  background: var(--primary);
-  border-radius: var(--radius-md);
+  width: 56px;
+  height: 56px;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-lg);
   color: white;
   flex-shrink: 0;
-  transition: transform var(--transition-base);
+  transition: all var(--transition-bounce);
+  box-shadow: var(--shadow-sm);
 }
 
 .bot-card:hover .bot-icon {
-  transform: scale(1.05);
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: var(--shadow-md);
+}
+
+.bot-card.activo .bot-icon {
+  background: var(--gradient-success);
+}
+
+.bot-card.inactivo .bot-icon {
+  background: var(--gradient-subtle);
+  color: var(--text-tertiary);
 }
 
 .bot-info {
@@ -265,14 +298,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
   background: var(--bg-tertiary);
   border-radius: var(--radius-sm);
-  transition: background var(--transition-base);
+  transition: all var(--transition-base);
+  border: 1px solid var(--border-light);
 }
 
 .bot-stat:hover {
-  background: var(--gray-200);
+  background: var(--bg-hover);
+  border-color: var(--border-medium);
+  transform: translateX(4px);
 }
 
 .stat-label {
@@ -303,17 +339,24 @@
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
+  box-shadow: var(--shadow-xs);
+  transition: all var(--transition-base);
 }
 
 .badge-activo {
-  background: var(--success);
+  background: var(--gradient-success);
   color: white;
 }
 
 .badge-inactivo {
-  background: var(--gray-300);
-  color: var(--gray-700);
+  background: var(--gradient-subtle);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-medium);
+}
+
+.bot-card:hover .badge {
+  transform: scale(1.05);
 }
 
 .btn-icono {
@@ -322,28 +365,70 @@
   cursor: pointer;
   padding: var(--space-sm);
   border-radius: var(--radius-md);
-  transition: all var(--transition-base);
+  transition: all var(--transition-bounce);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-icono::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--primary);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  z-index: 0;
+}
+
+.btn-icono:hover::before {
+  opacity: 0.1;
 }
 
 .btn-icono:hover {
-  background: var(--bg-primary);
-  border-color: var(--border-dark);
-  color: var(--text-primary);
-  transform: translateY(-1px);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-icono.btn-editar:hover {
+  border-color: var(--info);
+  color: var(--info);
+}
+
+.btn-icono.btn-env:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-icono.btn-activar:hover,
+.btn-icono.btn-desactivar:hover {
+  border-color: var(--warning);
+  color: var(--warning);
 }
 
 .btn-icono.btn-eliminar {
-  border-color: var(--danger);
-  color: var(--danger);
+  border-color: var(--border-medium);
+  color: var(--text-secondary);
 }
 
 .btn-icono.btn-eliminar:hover {
   background: var(--danger);
   color: white;
+  border-color: var(--danger);
+}
+
+.btn-icono.btn-eliminar:hover::before {
+  opacity: 0;
+}
+
+.btn-icono svg {
+  position: relative;
+  z-index: 1;
 }
   border-radius: 8px;
   transition: background 0.2s;
@@ -641,6 +726,161 @@
 .btn-clear-filters:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+/* ========================================
+   DARK MODE - TEXT & CONTAINER VISIBILITY
+   ======================================== */
+
+/* Toolbar & Containers */
+[data-theme="dark"] .bots-toolbar {
+  border-color: rgba(148, 163, 184, 0.2);
+  box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .search-box {
+  border-color: rgba(148, 163, 184, 0.2);
+  background: rgba(30, 41, 59, 0.3);
+}
+
+[data-theme="dark"] .search-box:hover {
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+[data-theme="dark"] .filter-group {
+  border-color: rgba(148, 163, 184, 0.2);
+  background: rgba(30, 41, 59, 0.3);
+}
+
+/* Bot Cards */
+[data-theme="dark"] .bot-card {
+  border-color: rgba(148, 163, 184, 0.2);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(148, 163, 184, 0.1);
+}
+
+[data-theme="dark"] .bot-card:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(139, 92, 246, 0.3);
+}
+
+/* Text Colors - Making them LIGHT for dark mode */
+[data-theme="dark"] .stat-label {
+  color: #94a3b8; /* Light gray instead of #64748b */
+}
+
+[data-theme="dark"] .stat-value {
+  color: #e2e8f0; /* Light instead of #1e293b */
+  background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .bot-tipo {
+  color: #cbd5e1; /* Light gray */
+  background: rgba(51, 65, 85, 0.5);
+}
+
+[data-theme="dark"] .bot-info h3 {
+  color: #f1f5f9; /* Very light for titles */
+}
+
+/* Badges in dark mode */
+[data-theme="dark"] .badge-activo {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #d1fae5; /* Light green text */
+}
+
+[data-theme="dark"] .badge-inactivo {
+  background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+  color: #e2e8f0; /* Light gray text instead of #616161 */
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+/* Bot Stats Background */
+[data-theme="dark"] .bot-stat {
+  background: rgba(30, 41, 59, 0.3);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme="dark"] .bot-stat:hover {
+  background: rgba(51, 65, 85, 0.5);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+[data-theme="dark"] .bot-card-body {
+  border-top-color: rgba(148, 163, 184, 0.2);
+  border-bottom-color: rgba(148, 163, 184, 0.2);
+}
+
+/* Table View - Dark Mode */
+[data-theme="dark"] .bots-table-container {
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme="dark"] .bots-table thead {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+[data-theme="dark"] .bots-table th {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .bots-table td {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .bots-table tbody tr {
+  border-bottom-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme="dark"] .bot-name {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .bot-plan-small {
+  color: #94a3b8; /* Light gray instead of dark */
+}
+
+/* Buttons in dark mode */
+[data-theme="dark"] .btn-icono {
+  background: rgba(51, 65, 85, 0.5);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme="dark"] .btn-icono:hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+[data-theme="dark"] .btn-icono-table {
+  background: rgba(51, 65, 85, 0.5);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme="dark"] .btn-icono-table:hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+/* Error & Empty States */
+[data-theme="dark"] .error-container {
+  background: rgba(127, 29, 29, 0.2);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="dark"] .no-results p {
+  color: #cbd5e1; /* Light gray instead of #475569 */
+}
+
+[data-theme="dark"] .results-count {
+  color: #94a3b8;
+}
+
+/* View Toggle */
+[data-theme="dark"] .view-toggle {
+  background: rgba(30, 41, 59, 0.5);
+  border-color: rgba(148, 163, 184, 0.2);
 }
 
 /* ========== RESPONSIVE ========== */
