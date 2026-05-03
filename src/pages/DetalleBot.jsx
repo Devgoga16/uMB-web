@@ -67,6 +67,13 @@ function DetalleBot() {
   const [billingSeleccionado, setBillingSeleccionado] = useState(null);
   const [archivoFactura, setArchivoFactura] = useState(null);
   const [subiendoFactura, setSubiendoFactura] = useState(false);
+  
+  // Estados para el modal de mensajes WhatsApp
+  const [modalMensajesWA, setModalMensajesWA] = useState(false);
+  const [mensajesWhatsApp, setMensajesWhatsApp] = useState(null);
+  const [cargandoMensajes, setCargandoMensajes] = useState(false);
+  const [paginaMensajes, setPaginaMensajes] = useState(1);
+  const [mesMensajes, setMesMensajes] = useState('');
 
   useEffect(() => {
     cargarDatos();
@@ -550,6 +557,55 @@ function DetalleBot() {
     }
   };
 
+  const cargarMensajesWhatsApp = async (month = '', page = 1) => {
+    setCargandoMensajes(true);
+    try {
+      const params = new URLSearchParams();
+      if (month) params.append('month', month);
+      params.append('limit', '50');
+      params.append('page', page.toString());
+
+      const response = await axios.get(
+        `${bot.url}/api/stats/whatsapp?${params.toString()}`,
+        {
+          headers: {
+            'accept': 'application/json',
+            'x-api-key': bot.apiKey
+          }
+        }
+      );
+
+      setMensajesWhatsApp(response.data.data);
+      setPaginaMensajes(page);
+    } catch (error) {
+      console.error('Error al cargar mensajes:', error);
+      const errorMsg = error.response?.data?.message || 'Error al cargar los mensajes';
+      toast.error(errorMsg);
+    } finally {
+      setCargandoMensajes(false);
+    }
+  };
+
+  const abrirModalMensajesWA = () => {
+    // Obtener el mes actual en formato YYYY-MM
+    const now = new Date();
+    const mesActual = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    setMesMensajes(mesActual);
+    setModalMensajesWA(true);
+    cargarMensajesWhatsApp(mesActual, 1);
+  };
+
+  const cerrarModalMensajesWA = () => {
+    setModalMensajesWA(false);
+    setMensajesWhatsApp(null);
+    setPaginaMensajes(1);
+    setMesMensajes('');
+  };
+
+  const cambiarPaginaMensajes = (nuevaPagina) => {
+    cargarMensajesWhatsApp(mesMensajes, nuevaPagina);
+  };
+
 
 
   if (loading && !bot) {
@@ -731,7 +787,7 @@ function DetalleBot() {
 
               {/* Metrics Grid */}
               <div className="metrics-grid">
-                <div className="metric-card whatsapp">
+                <div className="metric-card whatsapp" onClick={abrirModalMensajesWA} style={{ cursor: 'pointer' }} title="Ver detalles de mensajes">
                   <div className="metric-header">
                     <MessageSquare size={24} />
                     <h3>WhatsApp</h3>
@@ -1610,6 +1666,170 @@ function DetalleBot() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Modal de Mensajes WhatsApp */}
+      <Modal
+        isOpen={modalMensajesWA}
+        onClose={cerrarModalMensajesWA}
+        title="Detalle de Mensajes WhatsApp"
+        size="large"
+      >
+        <div className="mensajes-whatsapp-modal">
+          {/* Filtro de mes */}
+          <div className="filter-section">
+            <label htmlFor="filtroMes">Filtrar por mes:</label>
+            <input
+              type="month"
+              id="filtroMes"
+              value={mesMensajes}
+              onChange={(e) => {
+                setMesMensajes(e.target.value);
+                cargarMensajesWhatsApp(e.target.value, 1);
+              }}
+              disabled={cargandoMensajes}
+              className="form-input"
+            />
+          </div>
+
+          {cargandoMensajes ? (
+            <div className="loading-container">
+              <span className="spinner-small"></span>
+              <p>Cargando mensajes...</p>
+            </div>
+          ) : mensajesWhatsApp ? (
+            <>
+              {/* Estadísticas */}
+              {mensajesWhatsApp.stats && (
+                <div className="stats-grid-modal">
+                  <div className="stat-card-modal success">
+                    <CheckCircle size={20} />
+                    <div>
+                      <span className="stat-label">Enviados</span>
+                      <strong>{mensajesWhatsApp.stats.totalSent}</strong>
+                    </div>
+                  </div>
+                  <div className="stat-card-modal danger">
+                    <XCircle size={20} />
+                    <div>
+                      <span className="stat-label">Fallidos</span>
+                      <strong>{mensajesWhatsApp.stats.totalFailed}</strong>
+                    </div>
+                  </div>
+                  <div className="stat-card-modal warning">
+                    <Activity size={20} />
+                    <div>
+                      <span className="stat-label">Pendientes</span>
+                      <strong>{mensajesWhatsApp.stats.totalPending}</strong>
+                    </div>
+                  </div>
+                  <div className="stat-card-modal info">
+                    <FileText size={20} />
+                    <div>
+                      <span className="stat-label">Con Imágenes</span>
+                      <strong>{mensajesWhatsApp.stats.totalWithImages}</strong>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Tabla de mensajes */}
+              {mensajesWhatsApp.messages && mensajesWhatsApp.messages.length > 0 ? (
+                <div className="messages-table-wrapper">
+                  <table className="messages-table">
+                    <thead>
+                      <tr>
+                        <th>Destinatario</th>
+                        <th>Mensaje</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Media</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mensajesWhatsApp.messages.map((msg) => (
+                        <tr key={msg._id}>
+                          <td className="phone-cell">{msg.to}</td>
+                          <td className="message-cell">
+                            <div className="message-preview">
+                              {msg.message || <em>Sin texto</em>}
+                            </div>
+                            {msg.error && (
+                              <div className="error-message">
+                                <XCircle size={12} />
+                                {msg.error}
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                            <span className={`badge-status status-${msg.status}`}>
+                              {msg.status === 'sent' ? 'Enviado' : 
+                               msg.status === 'failed' ? 'Fallido' : 
+                               msg.status === 'pending' ? 'Pendiente' : msg.status}
+                            </span>
+                          </td>
+                          <td className="date-cell">
+                            {msg.sentAt ? new Date(msg.sentAt).toLocaleString('es-PE', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            }) : '-'}
+                          </td>
+                          <td className="media-cell">
+                            {msg.hasMedia ? (
+                              <span className="badge-media">
+                                <FileText size={12} />
+                                Sí
+                              </span>
+                            ) : (
+                              '-'
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <MessageSquare size={48} />
+                  <p>No hay mensajes en este período</p>
+                </div>
+              )}
+
+              {/* Paginación */}
+              {mensajesWhatsApp.pagination && mensajesWhatsApp.pagination.pages > 1 && (
+                <div className="pagination-container">
+                  <button
+                    onClick={() => cambiarPaginaMensajes(paginaMensajes - 1)}
+                    disabled={paginaMensajes === 1 || cargandoMensajes}
+                    className="btn-pagination"
+                  >
+                    Anterior
+                  </button>
+                  <span className="pagination-info">
+                    Página {mensajesWhatsApp.pagination.page} de {mensajesWhatsApp.pagination.pages}
+                    {' '}({mensajesWhatsApp.pagination.total} mensajes)
+                  </span>
+                  <button
+                    onClick={() => cambiarPaginaMensajes(paginaMensajes + 1)}
+                    disabled={paginaMensajes >= mensajesWhatsApp.pagination.pages || cargandoMensajes}
+                    className="btn-pagination"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="empty-state">
+              <MessageSquare size={48} />
+              <p>No se pudieron cargar los mensajes</p>
+            </div>
+          )}
+        </div>
       </Modal>
     </Layout>
   );
