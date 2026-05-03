@@ -53,8 +53,12 @@ function DetalleBot() {
   
   // Estados para el modal de WhatsApp
   const [modalWhatsApp, setModalWhatsApp] = useState(false);
+  const [whatsappTab, setWhatsappTab] = useState('text'); // 'text', 'image-url', 'image-upload'
   const [numeroDestino, setNumeroDestino] = useState('');
   const [mensajeTexto, setMensajeTexto] = useState('');
+  const [imagenUrl, setImagenUrl] = useState('');
+  const [captionTexto, setCaptionTexto] = useState('');
+  const [archivoImagen, setArchivoImagen] = useState(null);
   const [enviandoMensaje, setEnviandoMensaje] = useState(false);
   const [resultadoEnvio, setResultadoEnvio] = useState(null);
   
@@ -174,9 +178,7 @@ function DetalleBot() {
       );
       
       // Limpiar formulario y cerrar modal
-      setNumeroDestino('');
-      setMensajeTexto('');
-      setResultadoEnvio(null);
+      limpiarFormulariosWhatsApp();
       setTimeout(() => {
         cerrarModalWhatsApp();
       }, 1500);
@@ -190,16 +192,188 @@ function DetalleBot() {
     }
   };
 
+  const enviarImagenUrl = async (e) => {
+    e.preventDefault();
+    setEnviandoMensaje(true);
+    setResultadoEnvio(null);
+
+    try {
+      const response = await axios.post(
+        `${bot.url}/api/whatsapp/send-image`,
+        {
+          to: numeroDestino,
+          image: imagenUrl,
+          caption: captionTexto || undefined
+        },
+        {
+          headers: {
+            'accept': '*/*',
+            'x-api-key': bot.apiKey,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const fechaEnvio = new Date(response.data.data.sentAt);
+      const horaEnvio = fechaEnvio.toLocaleTimeString('es-PE', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+
+      toast.success(
+        `✓ Imagen enviada a +${response.data.data.to} a las ${horaEnvio}`,
+        {
+          autoClose: 4000,
+          style: {
+            fontSize: '0.95rem'
+          }
+        }
+      );
+      
+      limpiarFormulariosWhatsApp();
+      setTimeout(() => {
+        cerrarModalWhatsApp();
+      }, 1500);
+    } catch (error) {
+      console.error('Error al enviar imagen:', error);
+      const errorMsg = error.response?.data?.message || 'Error al enviar la imagen';
+      toast.error(errorMsg);
+      setResultadoEnvio(null);
+    } finally {
+      setEnviandoMensaje(false);
+    }
+  };
+
+  const enviarImagenUpload = async (e) => {
+    e.preventDefault();
+    if (!archivoImagen) {
+      toast.error('Por favor selecciona una imagen');
+      return;
+    }
+
+    setEnviandoMensaje(true);
+    setResultadoEnvio(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('to', numeroDestino);
+      formData.append('image', archivoImagen);
+      if (captionTexto) {
+        formData.append('caption', captionTexto);
+      }
+
+      const response = await axios.post(
+        `${bot.url}/api/whatsapp/send-image-upload`,
+        formData,
+        {
+          headers: {
+            'accept': 'application/json',
+            'x-api-key': bot.apiKey,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      const fechaEnvio = new Date(response.data.data.sentAt);
+      const horaEnvio = fechaEnvio.toLocaleTimeString('es-PE', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+
+      toast.success(
+        `✓ Imagen enviada a +${response.data.data.to} a las ${horaEnvio}`,
+        {
+          autoClose: 4000,
+          style: {
+            fontSize: '0.95rem'
+          }
+        }
+      );
+      
+      limpiarFormulariosWhatsApp();
+      setTimeout(() => {
+        cerrarModalWhatsApp();
+      }, 1500);
+    } catch (error) {
+      console.error('Error al enviar imagen:', error);
+      const errorMsg = error.response?.data?.message || 'Error al enviar la imagen';
+      toast.error(errorMsg);
+      setResultadoEnvio(null);
+    } finally {
+      setEnviandoMensaje(false);
+    }
+  };
+
   const abrirModalWhatsApp = () => {
     setModalWhatsApp(true);
+    setWhatsappTab('text');
     setResultadoEnvio(null);
   };
 
   const cerrarModalWhatsApp = () => {
     setModalWhatsApp(false);
+    limpiarFormulariosWhatsApp();
+    setResultadoEnvio(null);
+  };
+
+  const limpiarFormulariosWhatsApp = () => {
     setNumeroDestino('');
     setMensajeTexto('');
-    setResultadoEnvio(null);
+    setImagenUrl('');
+    setCaptionTexto('');
+    setArchivoImagen(null);
+  };
+
+  const handleArchivoImagenChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setArchivoImagen(file);
+    } else {
+      toast.error('Por favor selecciona un archivo de imagen válido');
+      e.target.value = null;
+    }
+  };
+
+  const copiarCurlText = () => {
+    const curlCommand = `curl -X 'POST' \\
+  '${bot.url}/api/whatsapp/send' \\
+  -H 'accept: */*' \\
+  -H 'x-api-key: ${bot.apiKey}' \\
+  -H 'Content-Type: application/json' \\
+  -d '{
+  "to": "955768897",
+  "message": "Hola, este es un mensaje de prueba"
+}'`;
+    navigator.clipboard.writeText(curlCommand);
+    toast.success('Comando curl copiado al portapapeles');
+  };
+
+  const copiarCurlImageUrl = () => {
+    const curlCommand = `curl -X 'POST' \\
+  '${bot.url}/api/whatsapp/send-image' \\
+  -H 'accept: */*' \\
+  -H 'x-api-key: ${bot.apiKey}' \\
+  -H 'Content-Type: application/json' \\
+  -d '{
+  "to": "955768897",
+  "image": "https://example.com/image.jpg",
+  "caption": "Esta es una imagen de ejemplo"
+}'`;
+    navigator.clipboard.writeText(curlCommand);
+    toast.success('Comando curl copiado al portapapeles');
+  };
+
+  const copiarCurlImageUpload = () => {
+    const curlCommand = `curl -X 'POST' \\
+  '${bot.url}/api/whatsapp/send-image-upload' \\
+  -H 'accept: application/json' \\
+  -H 'x-api-key: ${bot.apiKey}' \\
+  -H 'Content-Type: multipart/form-data' \\
+  -F 'to=955768897' \\
+  -F 'image=@/path/to/image.jpg;type=image/jpeg' \\
+  -F 'caption=Esta es una imagen de ejemplo'`;
+    navigator.clipboard.writeText(curlCommand);
+    toast.success('Comando curl copiado al portapapeles');
   };
 
   const abrirModalFactura = (billingRecord) => {
@@ -376,19 +550,7 @@ function DetalleBot() {
     }
   };
 
-  const copiarCurl = () => {
-    const curlCommand = `curl -X 'POST' \\
-  '${bot.url}/api/whatsapp/send' \\
-  -H 'accept: */*' \\
-  -H 'x-api-key: ${bot.apiKey}' \\
-  -H 'Content-Type: application/json' \\
-  -d '{
-  "to": "955768897",
-  "message": "Hola, este es un mensaje de prueba"
-}'`;
-    navigator.clipboard.writeText(curlCommand);
-    toast.success('Comando curl copiado al portapapeles');
-  };
+
 
   if (loading && !bot) {
     return (
@@ -926,7 +1088,7 @@ function DetalleBot() {
                   </h4>
                   <div className="code-block-header">
                     <span>POST {bot.url}/api/whatsapp/send</span>
-                    <button onClick={copiarCurl} className="btn-copy-code">
+                    <button onClick={copiarCurlText} className="btn-copy-code">
                       <Copy size={14} />
                       Copiar
                     </button>
@@ -1022,27 +1184,57 @@ function DetalleBot() {
         isOpen={modalWhatsApp}
         onClose={cerrarModalWhatsApp}
         title="Probar Envío WhatsApp"
-        size="medium"
+        size="large"
       >
-        <form onSubmit={enviarMensajeWhatsApp} className="whatsapp-form">
-          
-          {/* Sección de Documentación cURL */}
-          <div className="curl-section">
-            <div className="curl-header">
-              <h4>
-                <Code size={18} />
-                Ejemplo de uso con cURL
-              </h4>
-              <button 
-                type="button"
-                onClick={copiarCurl}
-                className="btn-icon"
-                title="Copiar cURL"
-              >
-                <Copy size={16} />
-              </button>
-            </div>
-            <pre className="curl-code">
+        <div className="whatsapp-test-modal">
+          {/* Tabs Navigation */}
+          <div className="tabs-navigation-modal">
+            <button 
+              className={`tab-btn-modal ${whatsappTab === 'text' ? 'active' : ''}`}
+              onClick={() => setWhatsappTab('text')}
+              disabled={enviandoMensaje}
+            >
+              <MessageSquare size={16} />
+              <span>Texto</span>
+            </button>
+            <button 
+              className={`tab-btn-modal ${whatsappTab === 'image-url' ? 'active' : ''}`}
+              onClick={() => setWhatsappTab('image-url')}
+              disabled={enviandoMensaje}
+            >
+              <ExternalLink size={16} />
+              <span>Imagen (URL)</span>
+            </button>
+            <button 
+              className={`tab-btn-modal ${whatsappTab === 'image-upload' ? 'active' : ''}`}
+              onClick={() => setWhatsappTab('image-upload')}
+              disabled={enviandoMensaje}
+            >
+              <FileText size={16} />
+              <span>Imagen (Upload)</span>
+            </button>
+          </div>
+
+          {/* Tab Content: Texto */}
+          {whatsappTab === 'text' && (
+            <div className="tab-panel-modal fade-in">
+              {/* cURL Section */}
+              <div className="curl-section-modal">
+                <div className="curl-header-modal">
+                  <h4>
+                    <Code size={18} />
+                    Ejemplo con cURL
+                  </h4>
+                  <button 
+                    type="button"
+                    onClick={copiarCurlText}
+                    className="btn-icon-modal"
+                    title="Copiar cURL"
+                  >
+                    <Copy size={16} />
+                  </button>
+                </div>
+                <pre className="curl-code-modal">
 {`curl -X 'POST' \\
   '${bot.url}/api/whatsapp/send' \\
   -H 'accept: */*' \\
@@ -1052,85 +1244,312 @@ function DetalleBot() {
   "to": "955768897",
   "message": "Hola, este es un mensaje de prueba"
 }'`}
-            </pre>
-            <div className="curl-info">
-              <p><strong>Endpoint:</strong> POST {bot.url}/api/whatsapp/send</p>
-              <p><strong>Headers requeridos:</strong></p>
-              <ul>
-                <li>x-api-key: {bot.apiKey}</li>
-                <li>Content-Type: application/json</li>
-              </ul>
-              <p><strong>Body (JSON):</strong></p>
-              <ul>
-                <li>to: Número sin código de país</li>
-                <li>message: Texto del mensaje</li>
-              </ul>
+                </pre>
+              </div>
+
+              <div className="form-divider-modal">
+                <span>Prueba directa</span>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={enviarMensajeWhatsApp} className="whatsapp-form-modal">
+                <div className="form-group">
+                  <label htmlFor="numeroDestino">
+                    Número de Destino <span className="required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="numeroDestino"
+                    value={numeroDestino}
+                    onChange={(e) => setNumeroDestino(e.target.value)}
+                    placeholder="Ej: 955768897"
+                    required
+                    disabled={enviandoMensaje}
+                    className="form-input"
+                  />
+                  <small className="form-hint">Sin código de país (+51)</small>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="mensajeTexto">
+                    Mensaje <span className="required">*</span>
+                  </label>
+                  <textarea
+                    id="mensajeTexto"
+                    value={mensajeTexto}
+                    onChange={(e) => setMensajeTexto(e.target.value)}
+                    placeholder="Escribe tu mensaje aquí..."
+                    rows="4"
+                    required
+                    disabled={enviandoMensaje}
+                    className="form-textarea"
+                  />
+                </div>
+
+                <div className="form-actions">
+                  <button
+                    type="button"
+                    onClick={cerrarModalWhatsApp}
+                    className="btn btn-secondary"
+                    disabled={enviandoMensaje}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={enviandoMensaje}
+                  >
+                    {enviandoMensaje ? (
+                      <>
+                        <span className="spinner-small"></span> Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <Send size={18} /> Enviar Mensaje
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
-          </div>
+          )}
 
-          <div className="form-divider">
-            <span>O prueba directamente aquí</span>
-          </div>
+          {/* Tab Content: Imagen (URL) */}
+          {whatsappTab === 'image-url' && (
+            <div className="tab-panel-modal fade-in">
+              {/* cURL Section */}
+              <div className="curl-section-modal">
+                <div className="curl-header-modal">
+                  <h4>
+                    <Code size={18} />
+                    Ejemplo con cURL
+                  </h4>
+                  <button 
+                    type="button"
+                    onClick={copiarCurlImageUrl}
+                    className="btn-icon-modal"
+                    title="Copiar cURL"
+                  >
+                    <Copy size={16} />
+                  </button>
+                </div>
+                <pre className="curl-code-modal">
+{`curl -X 'POST' \\
+  '${bot.url}/api/whatsapp/send-image' \\
+  -H 'accept: */*' \\
+  -H 'x-api-key: ${bot.apiKey}' \\
+  -H 'Content-Type: application/json' \\
+  -d '{
+  "to": "955768897",
+  "image": "https://example.com/image.jpg",
+  "caption": "Esta es una imagen de ejemplo"
+}'`}
+                </pre>
+              </div>
 
-          <div className="form-group">
-            <label htmlFor="numeroDestino">
-              Número de Destino <span className="required">*</span>
-            </label>
-            <input
-              type="text"
-              id="numeroDestino"
-              value={numeroDestino}
-              onChange={(e) => setNumeroDestino(e.target.value)}
-              placeholder="Ej: 955768897"
-              required
-              disabled={enviandoMensaje}
-              className="form-input"
-            />
-            <small className="form-hint">Sin código de país (+51)</small>
-          </div>
+              <div className="form-divider-modal">
+                <span>Prueba directa</span>
+              </div>
 
-          <div className="form-group">
-            <label htmlFor="mensajeTexto">
-              Mensaje <span className="required">*</span>
-            </label>
-            <textarea
-              id="mensajeTexto"
-              value={mensajeTexto}
-              onChange={(e) => setMensajeTexto(e.target.value)}
-              placeholder="Escribe tu mensaje aquí..."
-              rows="4"
-              required
-              disabled={enviandoMensaje}
-              className="form-textarea"
-            />
-          </div>
+              {/* Form */}
+              <form onSubmit={enviarImagenUrl} className="whatsapp-form-modal">
+                <div className="form-group">
+                  <label htmlFor="numeroDestinoImg">
+                    Número de Destino <span className="required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="numeroDestinoImg"
+                    value={numeroDestino}
+                    onChange={(e) => setNumeroDestino(e.target.value)}
+                    placeholder="Ej: 955768897"
+                    required
+                    disabled={enviandoMensaje}
+                    className="form-input"
+                  />
+                  <small className="form-hint">Sin código de país (+51)</small>
+                </div>
 
-          <div className="form-actions">
-            <button
-              type="button"
-              onClick={cerrarModalWhatsApp}
-              className="btn btn-secondary"
-              disabled={enviandoMensaje}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={enviandoMensaje}
-            >
-              {enviandoMensaje ? (
-                <>
-                  <span className="spinner-small"></span> Enviando...
-                </>
-              ) : (
-                <>
-                  <Send size={18} /> Enviar Mensaje
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+                <div className="form-group">
+                  <label htmlFor="imagenUrl">
+                    URL de la Imagen <span className="required">*</span>
+                  </label>
+                  <input
+                    type="url"
+                    id="imagenUrl"
+                    value={imagenUrl}
+                    onChange={(e) => setImagenUrl(e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                    required
+                    disabled={enviandoMensaje}
+                    className="form-input"
+                  />
+                  <small className="form-hint">URL pública de la imagen</small>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="captionUrl">
+                    Caption (Opcional)
+                  </label>
+                  <textarea
+                    id="captionUrl"
+                    value={captionTexto}
+                    onChange={(e) => setCaptionTexto(e.target.value)}
+                    placeholder="Texto que acompaña la imagen..."
+                    rows="3"
+                    disabled={enviandoMensaje}
+                    className="form-textarea"
+                  />
+                </div>
+
+                <div className="form-actions">
+                  <button
+                    type="button"
+                    onClick={cerrarModalWhatsApp}
+                    className="btn btn-secondary"
+                    disabled={enviandoMensaje}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={enviandoMensaje}
+                  >
+                    {enviandoMensaje ? (
+                      <>
+                        <span className="spinner-small"></span> Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <Send size={18} /> Enviar Imagen
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Tab Content: Imagen (Upload) */}
+          {whatsappTab === 'image-upload' && (
+            <div className="tab-panel-modal fade-in">
+              {/* cURL Section */}
+              <div className="curl-section-modal">
+                <div className="curl-header-modal">
+                  <h4>
+                    <Code size={18} />
+                    Ejemplo con cURL
+                  </h4>
+                  <button 
+                    type="button"
+                    onClick={copiarCurlImageUpload}
+                    className="btn-icon-modal"
+                    title="Copiar cURL"
+                  >
+                    <Copy size={16} />
+                  </button>
+                </div>
+                <pre className="curl-code-modal">
+{`curl -X 'POST' \\
+  '${bot.url}/api/whatsapp/send-image-upload' \\
+  -H 'accept: application/json' \\
+  -H 'x-api-key: ${bot.apiKey}' \\
+  -H 'Content-Type: multipart/form-data' \\
+  -F 'to=955768897' \\
+  -F 'image=@/path/to/image.jpg;type=image/jpeg' \\
+  -F 'caption=Esta es una imagen de ejemplo'`}
+                </pre>
+              </div>
+
+              <div className="form-divider-modal">
+                <span>Prueba directa</span>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={enviarImagenUpload} className="whatsapp-form-modal">
+                <div className="form-group">
+                  <label htmlFor="numeroDestinoUpload">
+                    Número de Destino <span className="required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="numeroDestinoUpload"
+                    value={numeroDestino}
+                    onChange={(e) => setNumeroDestino(e.target.value)}
+                    placeholder="Ej: 955768897"
+                    required
+                    disabled={enviandoMensaje}
+                    className="form-input"
+                  />
+                  <small className="form-hint">Sin código de país (+51)</small>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="archivoImagen">
+                    Seleccionar Imagen <span className="required">*</span>
+                  </label>
+                  <input
+                    type="file"
+                    id="archivoImagen"
+                    accept="image/*"
+                    onChange={handleArchivoImagenChange}
+                    required
+                    disabled={enviandoMensaje}
+                    className="form-input-file"
+                  />
+                  {archivoImagen && (
+                    <small className="file-name-selected">
+                      Archivo: {archivoImagen.name} ({(archivoImagen.size / 1024).toFixed(2)} KB)
+                    </small>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="captionUpload">
+                    Caption (Opcional)
+                  </label>
+                  <textarea
+                    id="captionUpload"
+                    value={captionTexto}
+                    onChange={(e) => setCaptionTexto(e.target.value)}
+                    placeholder="Texto que acompaña la imagen..."
+                    rows="3"
+                    disabled={enviandoMensaje}
+                    className="form-textarea"
+                  />
+                </div>
+
+                <div className="form-actions">
+                  <button
+                    type="button"
+                    onClick={cerrarModalWhatsApp}
+                    className="btn btn-secondary"
+                    disabled={enviandoMensaje}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={enviandoMensaje || !archivoImagen}
+                  >
+                    {enviandoMensaje ? (
+                      <>
+                        <span className="spinner-small"></span> Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <Send size={18} /> Enviar Imagen
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+        </div>
       </Modal>
 
       {/* Modal de Subida de Factura */}
